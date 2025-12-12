@@ -2,8 +2,10 @@ package com.streamseat.eventservice.controller;
 
 import com.streamseat.eventservice.model.Event;
 import com.streamseat.eventservice.repository.EventRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -26,5 +28,10 @@ public class EventController {
     @GetMapping
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
+    }
+    @GetMapping("/{id}")
+    public Event getEventById(@PathVariable("id") Long id) { // <--- The "id" string is critical!
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
     }
 }
