@@ -1,6 +1,16 @@
 version: '3.8'
 
 services:
+  mysqldb:
+    image: mysql:8.0
+    container_name: mysqldb
+    environment:
+      - MYSQL_DATABASE=stream_seat_db
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - "3306:3306"
+    networks:
+      - microservices-net
   # ----------------------------
   # 1. THE BRAIN (Eureka Server)
   # ----------------------------
@@ -32,7 +42,6 @@ services:
       - discovery-server
     networks:
       - microservices-net
-
   # ----------------------------
   # 3. BOOKING SERVICE
   # ----------------------------
@@ -41,13 +50,17 @@ services:
     container_name: booking-service
     build: ./booking-service
     ports:
-      - "8081:8080"                 # Optional: access directly via localhost:8081 if needed
+      - "8081:8080"
     environment:
       - SPRING_APPLICATION_NAME=booking-service
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      # Link to the container named 'mysqldb'
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/stream_seat_db?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
     depends_on:
       - discovery-server
-      - api-gateway
+      - mysqldb # Added dependency
     networks:
       - microservices-net
 
@@ -59,13 +72,17 @@ services:
     container_name: event-service
     build: ./event-service
     ports:
-      - "8082:8080"                 # Optional: access directly via localhost:8082 if needed
+      - "8082:8080"
     environment:
       - SPRING_APPLICATION_NAME=event-service
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      # Link to the container named 'mysqldb'
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/stream_seat_db?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
     depends_on:
       - discovery-server
-      - api-gateway
+      - mysqldb # Added dependency
     networks:
       - microservices-net
 
