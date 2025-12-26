@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # ----------------------------
+  # 1. THE BRAIN (Eureka Server)
+  # ----------------------------
+  discovery-server:
+    image: discovery-server:latest
+    container_name: discovery-server
+    build: ./discovery-server       # Tells Docker where to find the Dockerfile
+    ports:
+      - "8761:8761"                 # Maps Localhost:8761 -> Container:8761
+    environment:
+      - SPRING_APPLICATION_NAME=discovery-server
+    networks:
+      - microservices-net
+
+  # ----------------------------
+  # 2. THE GATEKEEPER (API Gateway)
+  # ----------------------------
+  api-gateway:
+    image: api-gateway:latest
+    container_name: api-gateway
+    build: ./api-gateway
+    ports:
+      - "8080:8080"                 # This is the ONLY entry point for users
+    environment:
+      - SPRING_APPLICATION_NAME=api-gateway
+      # The MAGIC: We tell it Eureka is at "http://discovery-server" (not localhost)
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+    depends_on:
+      - discovery-server
+    networks:
+      - microservices-net
+
+  # ----------------------------
+  # 3. BOOKING SERVICE
+  # ----------------------------
+  booking-service:
+    image: booking-service:latest
+    container_name: booking-service
+    build: ./booking-service
+    ports:
+      - "8081:8080"                 # Optional: access directly via localhost:8081 if needed
+    environment:
+      - SPRING_APPLICATION_NAME=booking-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+    depends_on:
+      - discovery-server
+      - api-gateway
+    networks:
+      - microservices-net
+
+  # ----------------------------
+  # 4. EVENT SERVICE
+  # ----------------------------
+  event-service:
+    image: event-service:latest
+    container_name: event-service
+    build: ./event-service
+    ports:
+      - "8082:8080"                 # Optional: access directly via localhost:8082 if needed
+    environment:
+      - SPRING_APPLICATION_NAME=event-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+    depends_on:
+      - discovery-server
+      - api-gateway
+    networks:
+      - microservices-net
+
+# Create a shared network so they can talk to each other
+networks:
+  microservices-net:
+    driver: bridge
