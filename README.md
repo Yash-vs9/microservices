@@ -1,20 +1,17 @@
 # Stream-Seat: Microservices Migration to AWS Fargate
 
-[![AWS](https://img.shields.io/badge/AWS-Fargate-orange?logo=amazon-aws)](https://aws.amazon.com/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green?logo=springboot)](https://spring.io/projects/spring-boot)
-[![Eureka](https://img.shields.io/badge/Service%20Discovery-Eureka-blue)](https://github.com/Netflix/eureka)
-
 ## Project Overview
-**Stream-Seat** is a distributed microservices platform for real-time ticket booking. This repository documents the transition from a local development environment to a production-grade **AWS Cloud** infrastructure.
+**Stream-Seat** is a distributed microservices platform designed for real-time ticket booking. This project documents the transition from a localized development environment to a production-grade, serverless **AWS Cloud** infrastructure.
 
-## Cloud Infrastructure (The "25%" Milestone)
-I have successfully established the networking backbone and service discovery layer.
+## Cloud Architecture (The "50%" Milestone)
+The project has successfully reached the 50% deployment milestone, moving from core networking setup to the active orchestration of service discovery and persistent storage integration.
 
-### **Current Infrastructure Components:**
-* **Custom VPC:** `microservices-vpc` with a 10.0.0.0/16 CIDR block.
-* **Network Partitioning:** 2 Public Subnets (for Discovery/Gateway) and 2 Private Subnets (for Microservices/Database) across `us-east-1a` and `us-east-1b`.
-* **Service Discovery:** Netflix Eureka deployed as a serverless container on **AWS Fargate**.
-* **Registry:** Multi-region image management via **Amazon ECR**.
+### Current Infrastructure Components:
+* **Compute:** AWS Fargate (Serverless) utilizing the **AMD64** runtime environment.
+* **Service Discovery:** Netflix Eureka Server facilitating internal service-to-service communication via Private VPC routing.
+* **Database:** Amazon RDS (MySQL) deployed within private subnets for enhanced data security.
+* **Registry:** Amazon ECR for multi-region container image management and distribution.
+* **Networking:** Custom VPC with a multi-AZ, split-subnet architecture (Public/Private).
 
 
 
@@ -22,30 +19,37 @@ I have successfully established the networking backbone and service discovery la
 
 ## Technical Challenges & Solutions
 
-### 1. Solving the `ResourceInitializationError`
-* **Issue:** Fargate tasks failed to pull images from ECR due to an `i/o timeout`.
-* **Cause:** Tasks in the custom VPC lacked a public IP and a route to the Internet Gateway.
-* **Fix:** Enabled **Auto-assign Public IPv4** on subnets and updated the **Route Table** to point `0.0.0.0/0` to the Internet Gateway.
+### 1. Cross-Platform Container Compatibility
+* **Issue:** `CannotPullContainerError: image Manifest does not contain descriptor matching platform 'linux/amd64'`.
+* **Cause:** Development on Apple Silicon (ARM64) created an architecture mismatch when deploying to standard AMD64 Fargate nodes.
+* **Fix:** Implemented **Docker multi-platform builds** using the `--platform linux/amd64` flag. This ensured that images built on ARM64 hardware remained fully compatible with cloud-native x86_64 runtimes.
 
-### 2. Registry Auth & URI Configuration
-* **Issue:** `CannotPullContainerError` (Not Found).
-* **Fix:** Corrected the Image URI in the **ECS Task Definition** to point to the `us-east-1` regional registry instead of the local build path.
+### 2. Private Database Orchestration
+* **Issue:** `SQLGrammarException: Unknown database` and connection timeouts during service startup.
+* **Cause:** Strict VPC isolation prevented external schema initialization, and the application required a pre-existing schema for Hibernate DDL execution.
+* **Fix:** Implemented **Security Group Nesting** to allow traffic specifically from the Application Security Group (`app-sg`) to the Database Security Group (`rds-sg`). Leveraged Spring Boot’s **Externalized Configuration** to map the JDBC connection to the default `mysql` schema for initial VPC handshake validation.
+
+### 3. Internal Service Discovery Handshake
+* **Issue:** Microservices successfully reached a `RUNNING` status but failed to appear in the Eureka registry.
+* **Cause:** Communication was blocked by default Security Group ingress rules and hindered by the dynamic nature of Fargate Private IPs.
+* **Fix:** Established a **Self-Referencing Security Group rule** for port 8761 and updated environment variables to use current **VPC Private IPs**. This ensured all registry traffic stayed within the AWS internal network, eliminating data egress costs and minimizing latency.
 
 ---
 
 ## Deployment Status
-| Service | Status | Port | Networking |
-| :--- | :--- | :--- | :--- |
-| **Discovery Server (Eureka)** | RUNNING | 8761 | Public Subnet |
-| **Booking Service** | IMAGE READY | 8081 | Pending RDS Link |
-| **Event Service** | IMAGE READY | 8082 | Pending RDS Link |
-| **API Gateway** | IMAGE READY | 8080 | Pending RDS Link |
-| **RDS MySQL** | CONFIGURING | 3306 | Private Subnet |
+
+| Service | Status | Port | Networking | Registry |
+| :--- | :--- | :--- | :--- | :--- |
+| **Discovery Server (Eureka)** | **RUNNING** | 8761 | Public Subnet | ECR (us-east-1) |
+| **Booking Service** | **RUNNING** | 8080 | Private Subnet | ECR (us-east-1) |
+| **Event Service** | **IMAGE READY** | 8082 | Private Subnet | ECR (us-east-1) |
+| **API Gateway** | **IMAGE READY** | 8080 | Public Subnet | ECR (us-east-1) |
+| **RDS MySQL** | **AVAILABLE** | 3306 | Private Subnet | AWS RDS |
 
 ---
 
 ## Key Skills Demonstrated
-- **Cloud Networking:** VPC design, Subnetting, Route Tables, and Internet Gateways.
-- **Containerization:** Dockerizing Spring Boot apps and managing ECR repositories.
-- **Troubleshooting:** Deep-diving into CloudWatch logs to resolve deployment "Circuit Breaker" triggers.
-
+* **Advanced Containerization:** Expertise in managing multi-architecture Docker manifests and ECR lifecycle policies.
+* **Infrastructure Troubleshooting:** Proficiency in analyzing CloudWatch logs and Spring Boot stack traces to resolve network-level and application-level failures.
+* **Cloud Security:** Implementation of the **Principle of Least Privilege** through granular Security Group rules and private network isolation.
+* **Externalized Configuration:** Utilizing Spring Boot profiles and environment variable injection to maintain environment parity across local and cloud deployments.
