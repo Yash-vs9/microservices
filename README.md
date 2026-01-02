@@ -3,8 +3,8 @@
 ## Project Overview
 **Stream-Seat** is a distributed microservices platform designed for real-time ticket booking. This project documents the transition from a localized development environment to a production-grade, serverless **AWS Cloud** infrastructure.
 
-## Cloud Architecture (The "50%" Milestone)
-The project has successfully reached the 50% deployment milestone, moving from core networking setup to the active orchestration of service discovery and persistent storage integration.
+## Cloud Architecture (The "80%" Milestone)
+The project has successfully moved into advanced orchestration, shifting from manual IP-based networking to automated DNS-based Service Discovery and isolated data tier management.
 
 ### Current Infrastructure Components:
 * **Compute:** AWS Fargate (Serverless) utilizing the **AMD64** runtime environment.
@@ -34,6 +34,14 @@ The project has successfully reached the 50% deployment milestone, moving from c
 * **Cause:** Communication was blocked by default Security Group ingress rules and hindered by the dynamic nature of Fargate Private IPs.
 * **Fix:** Established a **Self-Referencing Security Group rule** for port 8761 and updated environment variables to use current **VPC Private IPs**. This ensured all registry traffic stayed within the AWS internal network, eliminating data egress costs and minimizing latency.
 
+### 4. Ephemeral IP Management & Service Discovery
+* **Issue:** Fargate tasks receive new Private IPs on every restart, forcing manual updates to the EUREKA_CLIENT_SERVICEURL_DEFAULTZONE variable.
+* **Fix:** Implemented AWS Cloud Map. By creating a Private DNS Namespace and linking the Eureka service to an A record (eureka.stream-seat.local), microservices now find the registry via a consistent hostname regardless of underlying IP changes.
+
+### 5. MySQL 8.0 "Access Denied" for System Schemas
+* **Issue:** Access to data dictionary table 'mysql.events' is rejected.
+* **Cause:** Application tables were being created in the mysql system schema, which is restricted in MySQL 8.0+ for security reasons.
+* **Fix:** Utilized a Bastion Host (EC2) to perform remote administrative tasks. Created a dedicated stream_seat_db application schema, isolating application data from system metadata and adhering to security best practices.
 ---
 
 ## Deployment Status
@@ -42,8 +50,8 @@ The project has successfully reached the 50% deployment milestone, moving from c
 | :--- | :--- | :--- | :--- | :--- |
 | **Discovery Server (Eureka)** | **RUNNING** | 8761 | Public Subnet | ECR (us-east-1) |
 | **Booking Service** | **RUNNING** | 8080 | Private Subnet | ECR (us-east-1) |
-| **Event Service** | **IMAGE READY** | 8082 | Private Subnet | ECR (us-east-1) |
-| **API Gateway** | **IMAGE READY** | 8080 | Public Subnet | ECR (us-east-1) |
+| **Event Service** | **RUNNING** | 8081 | Private Subnet | ECR (us-east-1) |
+| **API Gateway** | **IMAGE READY** | 8082 | Public Subnet | ECR (us-east-1) |
 | **RDS MySQL** | **AVAILABLE** | 3306 | Private Subnet | AWS RDS |
 
 ---
@@ -53,3 +61,4 @@ The project has successfully reached the 50% deployment milestone, moving from c
 * **Infrastructure Troubleshooting:** Proficiency in analyzing CloudWatch logs and Spring Boot stack traces to resolve network-level and application-level failures.
 * **Cloud Security:** Implementation of the **Principle of Least Privilege** through granular Security Group rules and private network isolation.
 * **Externalized Configuration:** Utilizing Spring Boot profiles and environment variable injection to maintain environment parity across local and cloud deployments.
+* **Cloud Orchestration:** Managing service lifecycles via AWS ECS and Cloud Map.
