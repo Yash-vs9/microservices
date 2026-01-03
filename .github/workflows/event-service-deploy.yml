@@ -2,18 +2,27 @@ name: Deploy Event Service to Amazon ECS
 
 on:
   push:
-    branches: [ "main" ] # Pipeline runs every time you push to main
+    branches: [ "main" ]
+    # PRO TIP: Only run this pipeline if files in the event-service folder change
+    paths:
+      - 'event-service/**'
 
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: event-service
   ECS_SERVICE: event-service
   ECS_CLUSTER: stream-seat-cluster
-  CONTAINER_NAME: event-service-container # Make sure this matches your Task Definition
+  CONTAINER_NAME: event-service-container
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    # This tells GitHub to run all 'run' commands inside the event-service directory
+    defaults:
+      run:
+        working-directory: ./event-service
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -43,7 +52,7 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          # Use buildx for the AMD64 architecture we need for Fargate
+          # buildx is used for AMD64 compatibility on Fargate
           docker buildx create --use
           docker buildx build --platform linux/amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
