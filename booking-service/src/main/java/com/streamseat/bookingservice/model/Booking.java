@@ -1,5 +1,7 @@
 package com.streamseat.bookingservice.model;
 
+import com.streamseat.bookingservice.dto.SeatType;
+import com.streamseat.bookingservice.dto.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,6 +22,8 @@ public class Booking {
 
     private Long eventId;    // Which event?
     private Long userId;     // Who booked it? (We'll hardcode this for now)
-    private String status;   // CONFIRMED, CANCELLED
+    @Enumerated(EnumType.STRING)
+    private SeatType seatType;
+    private Status status;   // CONFIRMED, CANCELLED
     private LocalDateTime bookingTime;
 }

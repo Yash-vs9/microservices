@@ -24,4 +24,8 @@ public class Event {
     private String description;
     private LocalDateTime eventDateTime;
     private int capacity;
+    private int frontSeats;
+    private int backSeats;
+    private int availableFrontSeats;
+    private int availableBackSeats;
 }

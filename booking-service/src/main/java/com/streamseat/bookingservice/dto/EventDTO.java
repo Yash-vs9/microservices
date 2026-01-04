@@ -8,5 +8,5 @@ public class EventDTO {
     private Long id;
     private String title;
     private int capacity;
-//    private LocalDateTime eventDateTime;
+    private LocalDateTime eventDateTime;
 }

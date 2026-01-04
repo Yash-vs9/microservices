@@ -2,10 +2,10 @@ name: Deploy Event Service to Amazon ECS
 
 on:
   push:
-    branches: [ "main" ]
-    # PRO TIP: Only run this pipeline if files in the event-service folder change
-    paths:
-      - 'event-service/**'
+#    branches: [ "main" ]
+#    # PRO TIP: Only run this pipeline if files in the event-service folder change
+#    paths:
+#      - 'event-service/**'
 
 env:
   AWS_REGION: us-east-1
