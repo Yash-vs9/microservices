@@ -2,6 +2,7 @@ package com.streamseat.bookingservice.controller;
 
 import com.streamseat.bookingservice.client.EventClient;
 import com.streamseat.bookingservice.dto.EventDTO;
+import com.streamseat.bookingservice.dto.Status;
 import com.streamseat.bookingservice.model.Booking;
 import com.streamseat.bookingservice.repository.BookingRepository;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +37,7 @@ public class BookingController {
         }
 
         // 3. BOOK IT
-        bookingRequest.setStatus("CONFIRMED");
+        bookingRequest.setStatus(Status.valueOf("CONFIRMED"));
         bookingRequest.setBookingTime(LocalDateTime.now());
         bookingRepository.save(bookingRequest);
 
