@@ -17,6 +17,7 @@
         <module>event-service</module>
         <module>booking-service</module>
         <module>api-gateway</module>
+        <module>auth-service</module>
     </modules>
 
     <dependencyManagement>
