@@ -21,8 +21,9 @@ public class BookingController {
     }
 
     @PostMapping
-    public String bookTicket(@RequestBody Booking bookingRequest) {
+    public String bookTicket(@RequestBody Booking bookingRequest,@RequestHeader("X-User-Id") String userId) {
         Long eventId = bookingRequest.getEventId();
+
 
         // 1. TALK to Event Service: "Does this event exist?"
         EventDTO event = eventClient.getEventById(eventId);
@@ -39,6 +40,8 @@ public class BookingController {
         // 3. BOOK IT
         bookingRequest.setStatus(Status.valueOf("CONFIRMED"));
         bookingRequest.setBookingTime(LocalDateTime.now());
+        bookingRequest.setUserId(userId);
+        System.out.println(userId);
         bookingRepository.save(bookingRequest);
 
         return "Success! Ticket booked for event: " + event.getTitle();

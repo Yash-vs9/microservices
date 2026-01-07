@@ -8,16 +8,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-// NAME must match the name in Eureka (EVENT-SERVICE)
 @FeignClient(name = "event-service")
 public interface EventClient {
 
-    // We are "mapping" the call to the Event Service's existing endpoint
-    // GET http://event-service/api/events/{id}
-    // (Note: We need to go add this endpoint to Event Service later if it's missing!)
     @GetMapping("/api/events/{id}")
+        // Added ("id") here
     EventDTO getEventById(@PathVariable("id") Long id);
 
     @PutMapping("/api/events/{id}/reserve")
-    boolean reserveSeat(@PathVariable("id") Long id, @RequestParam SeatType seatType);
+        // Added ("id") and ("seatType") here
+    boolean reserveSeat(@PathVariable("id") Long id,
+                        @RequestParam("seatType") SeatType seatType);
 }

@@ -21,7 +21,7 @@ public class Booking {
     private Long id;
 
     private Long eventId;    // Which event?
-    private Long userId;     // Who booked it? (We'll hardcode this for now)
+    private String userId;     // Who booked it? (We'll hardcode this for now)
     @Enumerated(EnumType.STRING)
     private SeatType seatType;
     private Status status;   // CONFIRMED, CANCELLED

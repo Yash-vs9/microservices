@@ -17,7 +17,7 @@ import java.awt.print.Book;
 public class BookingService {
     public final EventClient eventClient;
     private final BookingRepository bookingRepository;
-    public String bookTicket(Long eventId, SeatType seat,Long userId){
+    public String bookTicket(Long eventId, SeatType seat,String userId){
         EventDTO event=eventClient.getEventById(eventId);
         Booking booking=new Booking();
         booking.setBookingTime(event.getEventDateTime());
