@@ -17,6 +17,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        System.out.println("CustomUserDetailsService called for: " + username);
         Optional<UserCredential> credential = repository.findByName(username);
         return credential.map(CustomUserDetails::new).orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
